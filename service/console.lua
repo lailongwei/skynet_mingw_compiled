@@ -12,6 +12,7 @@ end
 
 local function console_main_loop()
 	local stdin = socket.stdin()
+	socket.lock(stdin)
 	while true do
 		local cmdline = socket.readline(stdin, "\n")
 		local split = split_cmdline(cmdline)
@@ -22,6 +23,7 @@ local function console_main_loop()
 			pcall(skynet.newservice, cmdline)
 		end
 	end
+	socket.unlock(stdin)
 end
 
 skynet.start(function()
