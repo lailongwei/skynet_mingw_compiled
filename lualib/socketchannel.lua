@@ -328,8 +328,7 @@ local function block_connect(self, once)
 
 	r = check_connection(self)
 	if r == nil then
-		skynet.error(string.format("Connect to %s:%d failed (%s)", self.__host, self.__port, err))
-		error(socket_error)
+		error(string.format("Connect to %s:%d failed (%s)", self.__host, self.__port, err))
 	else
 		return r
 	end

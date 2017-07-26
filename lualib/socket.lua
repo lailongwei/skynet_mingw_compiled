@@ -407,6 +407,8 @@ end
 
 ---------------------- UDP
 
+local udp_socket = {}
+
 local function create_udp_object(id, cb)
 	assert(not socket_pool[id], "socket is not closed")
 	socket_pool[id] = {

@@ -54,15 +54,42 @@ redcmd[42] = function(fd, data)	-- '*'
 	local noerr = true
 	for i = 1,n do
 		local ok, v = read_response(fd)
-		if not ok then
+		if ok then
+			bulk[i] = v
+		else
 			noerr = false
 		end
-		bulk[i] = v
 	end
 	return noerr, bulk
 end
 
 -------------------
+
+local function redis_login(auth, db)
+	if auth == nil and db == nil then
+		return
+	end
+	return function(so)
+		if auth then
+			so:request("AUTH "..auth.."\r\n", read_response)
+		end
+		if db then
+			so:request("SELECT "..db.."\r\n", read_response)
+		end
+	end
+end
+
+function redis.connect(db_conf)
+	local channel = socketchannel.channel {
+		host = db_conf.host,
+		port = db_conf.port or 6379,
+		auth = redis_login(db_conf.auth, db_conf.db),
+		nodelay = true,
+	}
+	-- try connect first only once
+	channel:connect(true)
+	return setmetatable( { channel }, meta )
+end
 
 function command:disconnect()
 	self[1]:close()
@@ -121,32 +148,6 @@ local function compose_message(cmd, msg)
 	end
 
 	return lines
-end
-
-local function redis_login(auth, db)
-	if auth == nil and db == nil then
-		return
-	end
-	return function(so)
-		if auth then
-			so:request(compose_message("AUTH", auth), read_response)
-		end
-		if db then
-			so:request(compose_message("SELECT", db), read_response)
-		end
-	end
-end
-
-function redis.connect(db_conf)
-	local channel = socketchannel.channel {
-		host = db_conf.host,
-		port = db_conf.port or 6379,
-		auth = redis_login(db_conf.auth, db_conf.db),
-		nodelay = true,
-	}
-	-- try connect first only once
-	channel:connect(true)
-	return setmetatable( { channel }, meta )
 end
 
 setmetatable(command, { __index = function(t,k)
@@ -233,7 +234,7 @@ local watchmeta = {
 local function watch_login(obj, auth)
 	return function(so)
 		if auth then
-			so:request(compose_message("AUTH", auth), read_response)
+			so:request("AUTH "..auth.."\r\n", read_response)
 		end
 		for k in pairs(obj.__psubscribe) do
 			so:request(compose_message ("PSUBSCRIBE", k))

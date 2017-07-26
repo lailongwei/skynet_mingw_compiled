@@ -128,8 +128,4 @@ function conf.update(self, pointer)
 	core.update(self.__gcobj, pointer, { __gcobj = core.box(pointer) })
 end
 
-function conf.flush(obj)
-	getcobj(obj)
-end
-
 return conf

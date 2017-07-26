@@ -142,23 +142,14 @@ local function register_global()
 end
 
 local function register_local()
-	local function waitfor_remote(cmd, name, ...)
+	function cmd.GLAUNCH(name, ...)
 		local global_name = "@" .. name
-		local local_name
-		if name == "snaxd" then
-			local_name = global_name .. "." .. (...)
-		else
-			local_name = global_name
-		end
-		return waitfor(local_name, skynet.call, "SERVICE", "lua", cmd, global_name, ...)
+		return waitfor(global_name, skynet.call, "SERVICE", "lua", "LAUNCH", global_name, ...)
 	end
 
-	function cmd.GLAUNCH(...)
-		return waitfor_remote("LAUNCH", ...)
-	end
-
-	function cmd.GQUERY(...)
-		return waitfor_remote("QUERY", ...)
+	function cmd.GQUERY(name, ...)
+		local global_name = "@" .. name
+		return waitfor(global_name, skynet.call, "SERVICE", "lua", "QUERY", global_name, ...)
 	end
 
 	function cmd.LIST()
